@@ -6,7 +6,7 @@ adminRouter.use(urlencoded({ extended: true }));
 
 const GetDataFromPy = async (data) => {
   try {
-    const response = await fetch("http://localhost:5000/calculate", {
+    const response = await fetch("https://imdb-python.vercel.app/calculate", {
       method: "POST",
       body: JSON.stringify({ SearchID: data }),
       mode: "cors",
