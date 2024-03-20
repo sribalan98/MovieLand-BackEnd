@@ -1,14 +1,15 @@
 import MoviePostModel from "../models/MoviePost.js";
 import { Router, json, urlencoded } from "express";
+import cors from "cors";
 const adminRouter = Router();
 adminRouter.use(json());
+adminRouter.use(cors());
 adminRouter.use(urlencoded({ extended: true }));
-
 const GetDataFromPy = async (data) => {
   try {
-    const response = await fetch("https://imdb-python.vercel.app/calculate", {
+    const response = await fetch("https://imbd-scraper.vercel.app/getByID", {
       method: "POST",
-      body: JSON.stringify({ SearchID: data }),
+      body: JSON.stringify({ id: data }),
       mode: "cors",
       headers: {
         "Content-Type": "application/json",
@@ -24,7 +25,8 @@ const GetDataFromPy = async (data) => {
     }
 
     const result = await response.json();
-    console.log(result);
+    // console.log(result);
+    console.log("200 ok");
 
     return result;
   } catch (error) {
@@ -39,22 +41,36 @@ const CheckDuplication = async (dataTittle) => {
 //Value from Search Input
 adminRouter.post("/adminSearch", async (req, res) => {
   try {
-    const { SearchID } = req.body;
-    console.log(SearchID);
-    const result = await GetDataFromPy(SearchID);
-
+    const { id } = req.body;
+    if (!id) {
+      throw new Error("id is not recevied");
+    }
+    console.log(id);
+    const result = await GetDataFromPy(id);
+    // console.log(result);
+    //rating value
+    // const { ratingValue } = aggregateRating;
     const {
       name,
       genre,
       description,
-      poster,
-      rating,
+      image,
+      aggregateRating,
       duration,
       director,
       datePublished,
-    } = JSON.parse(result.IMBD$DATA);
-    //rating value
-    const { ratingValue } = rating;
+    } = result;
+    // const sample = {
+    //   name,
+    //   genre,
+    //   description,
+    //   image,
+    //   ratingValue: aggregateRating.ratingValue,
+    //   duration,
+    //   director,
+    //   datePublished,
+    // };
+    // console.log(sample);
 
     //duration time = Array
     const durationString = duration;
@@ -76,16 +92,18 @@ adminRouter.post("/adminSearch", async (req, res) => {
       success: true,
       message: "Data received successfully",
       imbd$data: {
-        name,
-        genre,
-        description,
-        poster,
-        ratingValue,
-        durationArray,
-        directorName,
-        dateArray,
+        name: name,
+        genre: genre,
+        description: description,
+        poster: image,
+        ratingValue: aggregateRating.ratingValue,
+        durationArray: durationArray,
+        directorName: directorName,
+        dateArray: dateArray,
       },
     });
+
+    // res.status(200).json({ msg: "hello from AdminRouter", id: id });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Internal server error" });
@@ -106,8 +124,8 @@ adminRouter.post("/postmovie", async (req, res) => {
     Rating,
     ReleaseDate,
   } = req.body;
-
   try {
+    console.log("entry on try line 128");
     if (await CheckDuplication(Tittle)) {
       throw new Error(401);
     }

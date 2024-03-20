@@ -1,9 +1,11 @@
-const movieRouter = Router();
 // const MoviePostModel = require("../models/MoviePost.js");
 import shuffleArray from "../functions/shuffle.js";
 import { Router, json, urlencoded } from "express";
+import cors from "cors";
 import MoviePostModel from "../models/MoviePost.js";
+const movieRouter = Router();
 movieRouter.use(json());
+movieRouter.use(cors());
 movieRouter.use(urlencoded({ extended: true }));
 
 //Date year Validator
